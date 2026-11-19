@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Dinder.Api/Dinder.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Dinder.Api.Tests/Dinder.Api.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,47 @@
+name: dinder
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: dinder
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run infra/Initialize-Local.ps1 first}
+      DINDER_DATABASE_PASSWORD: ${DINDER_DATABASE_PASSWORD:?Run infra/Initialize-Local.ps1 first}
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infra/init-database.sh:/docker-entrypoint-initdb.d/01-dinder.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d dinder"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  api:
+    build:
+      context: .
+      dockerfile: src/Dinder.Api/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Dinder: Host=db;Database=dinder;Username=dinder;Password=${DINDER_DATABASE_PASSWORD}
+      Database__MigrateOnStartup: "true"
+      Bootstrap__Enabled: "true"
+      Bootstrap__ChefPassword: ${DINDER_CHEF_PASSWORD:?Run infra/Initialize-Local.ps1 first}
+      Bootstrap__MemberPassword: ${DINDER_MEMBER_PASSWORD:?Run infra/Initialize-Local.ps1 first}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - identity-keys:/home/app/.aspnet/DataProtection-Keys
+  web:
+    build:
+      context: .
+      dockerfile: src/Dinder.Web/Dockerfile
+    ports:
+      - "127.0.0.1:8080:80"
+    depends_on:
+      - api
+volumes:
+  postgres-data:
+  identity-keys:

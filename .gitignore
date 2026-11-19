@@ -1,0 +1,12 @@
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+.tools/
+.env
+.env.*
+!.env.example
+artifacts/
+*.user
+*.log
+*.tsbuildinfo
