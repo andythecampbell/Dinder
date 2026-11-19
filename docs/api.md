@@ -15,9 +15,12 @@ Every mutating request, including login, must send the antiforgery cookie and `X
 
 - `GET /api/households/{householdId}/kitchen`: household name, caller role, active round or null, sample recipe details, and only the caller's active-round votes.
 - `POST /api/households/{householdId}/rounds`: Chef only. Returns the new round's ID, UTC start time, and target Yes count. Returns 409 if a round is already active.
+- `POST /api/households/{householdId}/rounds/{roundId}/close`: Chef only. Returns 204 and marks the round inactive so the next week's round can start. Returns 409 if the round is already closed; 404 for a missing or foreign round; 403 for a non-Chef member. The flag flip is a single conditional update, so two concurrent closes return one 204 and one 409 rather than both succeeding.
 - `PUT /api/households/{householdId}/rounds/{roundId}/votes/{recipeId}`: `{ "choice": "Yes" }`, `"No"`, or `"Skip"`. Missing, unknown, null, and numeric choices are invalid. The user ID comes from the session. Creates or updates that caller's single vote for the recipe in the round and returns recipe ID/choice. Closed rounds return 409; foreign or missing resources return 404.
 
 The PUT operation replaces the current preference; sequential repeats do not insert more rows. Concurrent first writes may return 409 and should be retried after refresh. Concurrent updates are last-write-wins. The API does not expose other members' votes in Milestone 1.
+
+A vote write holds a row lock on its round for the duration of the transaction, so a close cannot land between the activity check and the vote insert. A vote that loses that race returns 409 instead of being stored in a closed round.
 
 ## Health
 

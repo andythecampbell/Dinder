@@ -42,13 +42,53 @@ public sealed class ApiTests : IDisposable
     }
 
     [Fact]
-    public async Task Member_cannot_start_round_and_chef_cannot_start_second_active_round()
+    public async Task Only_chef_can_close_an_active_round_and_start_the_next_one()
     {
+        using var chef = Client(); await Login(chef, "chef@dinder.local");
+        var roundResponse = await chef.PostAsync(RoundsPath, null);
+        Assert.Equal(HttpStatusCode.OK, roundResponse.StatusCode);
+        var round = await roundResponse.Content.ReadFromJsonAsync<RoundDto>(Json);
+        Assert.NotNull(round);
+        var closePath = $"{RoundsPath}/{round!.Id}/close";
+
         using var member = Client(); await Login(member, "member@dinder.local");
         Assert.Equal(HttpStatusCode.Forbidden, (await member.PostAsync(RoundsPath, null)).StatusCode);
-        using var chef = Client(); await Login(chef, "chef@dinder.local");
-        Assert.Equal(HttpStatusCode.OK, (await chef.PostAsync(RoundsPath, null)).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await member.PostAsync(closePath, null)).StatusCode);
+
         Assert.Equal(HttpStatusCode.Conflict, (await chef.PostAsync(RoundsPath, null)).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, (await chef.PostAsync(closePath, null)).StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, (await chef.PostAsync(closePath, null)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await chef.PostAsync(RoundsPath, null)).StatusCode);
+    }
+
+    [Fact]
+    public async Task Concurrent_closes_close_the_round_once_and_report_one_conflict()
+    {
+        using var chef = Client(); await Login(chef, "chef@dinder.local");
+        var roundResponse = await chef.PostAsync(RoundsPath, null);
+        var round = await roundResponse.Content.ReadFromJsonAsync<RoundDto>(Json);
+        var closePath = $"{RoundsPath}/{round!.Id}/close";
+
+        using var first = Client(); await Login(first, "chef@dinder.local");
+        using var second = Client(); await Login(second, "chef@dinder.local");
+        var responses = await Task.WhenAll(first.PostAsync(closePath, null), second.PostAsync(closePath, null));
+
+        Assert.Equal(new[] { HttpStatusCode.NoContent, HttpStatusCode.Conflict },
+            responses.Select(x => x.StatusCode).OrderBy(x => x).ToArray());
+        Assert.Equal(HttpStatusCode.Conflict, (await chef.PostAsync(closePath, null)).StatusCode);
+    }
+
+    [Fact]
+    public async Task Seeded_accounts_lock_after_five_failed_sign_in_attempts()
+    {
+        using var client = Client();
+        for (var attempt = 0; attempt < 5; attempt++)
+        {
+            await Csrf(client);
+            Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync("/api/auth/login", new { email = "chef@dinder.local", password = "wrong-password" })).StatusCode);
+        }
+        await Csrf(client);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync("/api/auth/login", new { email = "chef@dinder.local", password = TestApplication.Password })).StatusCode);
     }
 
     [Theory]

@@ -136,7 +136,7 @@ This is the implementation decision inventory requested for the first autonomous
 
 **Why:** A read-then-insert check alone cannot prevent concurrent active rounds.
 
-**Tradeoff:** There is no round-close endpoint in this milestone. The initial round remains active. Closing/finalization must later address concurrent votes and the finalized snapshot requirements.
+**Tradeoff:** Closing is implemented as a single conditional update on the active flag, so a double close cannot return 204 twice. Vote writes take a row lock on the round for the duration of their transaction, so a close cannot interleave between the activity check and the vote insert. Finalization snapshots and the recommendation/final-plan rules remain Milestone 3; closing a round only releases the one-active-round constraint.
 
 ### 16. One current vote per user, recipe, and round
 

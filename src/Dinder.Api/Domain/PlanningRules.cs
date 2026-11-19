@@ -27,6 +27,14 @@ public static class PlanningRules
         return new PlanningRound { HouseholdId = membership.HouseholdId, StartedAt = now };
     }
 
+    public static void CloseRound(HouseholdMember membership, PlanningRound? round)
+    {
+        RequireChef(membership);
+        if (round is null || round.HouseholdId != membership.HouseholdId)
+            throw new RuleViolation(404, "Planning round not found.");
+        if (!round.IsActive) throw new RuleViolation(409, "This planning round is already closed.");
+    }
+
     public static void ValidateVote(HouseholdMember membership, PlanningRound? round, Recipe? recipe, VoteChoice choice)
     {
         if (!Enum.IsDefined(choice)) throw new RuleViolation(400, "Choose Yes, No, or Skip.");

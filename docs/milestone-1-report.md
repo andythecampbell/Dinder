@@ -96,6 +96,6 @@ Initial failures and resolutions:
 
 ## Limitations and next verification
 
-The app deliberately stops before URL import, deck rules, recommendations, finalized plans, and public deployment. The only household/account provisioning is Development bootstrap. There is no round close, account recovery, invitation flow, production runbook, or committed browser regression suite. Detailed operational/security tradeoffs and concurrency semantics are recorded in the decision inventory and [current state](current-state.md).
+The app deliberately stops before URL import, deck rules, recommendations, finalized plans, and public deployment. The only household/account provisioning is Development bootstrap. Round close exists but does not yet finalize a plan or snapshot the round's votes. There is no account recovery, invitation flow, production runbook, or committed browser regression suite. Detailed operational/security tradeoffs and concurrency semantics are recorded in the decision inventory and [current state](current-state.md).
 
 For a useful human review: open the app, sign in using `.env`, inspect `PlanningRules` and `DinderDbContext`, change a vote from recipe details, reload, and compare the Chef and Member accounts. Read the decision inventory alongside those files, then use the [manual verification steps](local-development.md#manual-browser-verification) before starting Milestone 2.
