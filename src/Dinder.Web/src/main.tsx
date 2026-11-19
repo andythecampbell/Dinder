@@ -180,6 +180,31 @@ function App() {
                   {busy ? "Starting…" : "Start a planning round →"}
                 </button>
               )}
+              {kitchen.activeRound && kitchen.role === "Chef" && (
+                <button
+                  className="text-button"
+                  disabled={busy}
+                  onClick={() =>
+                    action(async () => {
+                      await api(
+                        `/households/${householdId}/rounds/${kitchen.activeRound!.id}/close`,
+                        "POST",
+                      );
+                      setKitchen(
+                        await api<Kitchen>(
+                          `/households/${householdId}/kitchen`,
+                        ),
+                      );
+                      setSelected(null);
+                      setNotice(
+                        "Planning round closed. You can start the next week when ready.",
+                      );
+                    })
+                  }
+                >
+                  {busy ? "Closing…" : "Close planning round"}
+                </button>
+              )}
               <button
                 className="text-button"
                 disabled={busy}

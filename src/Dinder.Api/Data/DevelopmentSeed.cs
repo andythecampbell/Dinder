@@ -42,9 +42,15 @@ public static class DevelopmentSeed
             var user = await users.FindByEmailAsync(email);
             if (user is null)
             {
-                user = new IdentityUser { UserName = email, Email = email };
+                user = new IdentityUser { UserName = email, Email = email, LockoutEnabled = true };
                 var result = await users.CreateAsync(user, password);
                 if (!result.Succeeded) throw new InvalidOperationException("Bootstrap account creation failed: " + string.Join(", ", result.Errors.Select(x => x.Code)));
+            }
+            else if (!user.LockoutEnabled)
+            {
+                user.LockoutEnabled = true;
+                var result = await users.UpdateAsync(user);
+                if (!result.Succeeded) throw new InvalidOperationException("Bootstrap account lockout configuration failed: " + string.Join(", ", result.Errors.Select(x => x.Code)));
             }
             if (!await db.HouseholdMembers.AnyAsync(x => x.HouseholdId == HouseholdId && x.UserId == user.Id))
                 db.HouseholdMembers.Add(new HouseholdMember { HouseholdId = HouseholdId, UserId = user.Id, Role = role });

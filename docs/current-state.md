@@ -6,7 +6,7 @@ Milestone 1 is implemented and verified locally. The repository now contains an 
 
 ## Implemented behavior
 
-- ASP.NET Core Identity sign-in/sign-out, HttpOnly cookie sessions, antiforgery protection, and login throttling/lockout.
+- ASP.NET Core Identity sign-in/sign-out, HttpOnly cookie sessions, antiforgery protection, and login throttling. Bootstrap users now participate in the configured lockout policy.
 - Development-only bootstrap for `Our kitchen`, one Chef, one Member, and three original sample recipes. Random local passwords are generated into ignored `.env`; no real credentials are tracked.
 - Authenticated household access and Chef-only planning-round creation.
 - Persistent, independent Yes/No/Skip votes through explicit recipe details. Updates replace the current vote without duplicates.
@@ -28,7 +28,7 @@ Milestone 1 is implemented and verified locally. The repository now contains an 
 
 - This is the updated first-run brief's seeded-recipe slice. No URL importer, recipe deck, recommendation, final plan, notification, RAG, or public deployment exists.
 - Household access is provisioned by the development seed. There is no household-creation wizard, public registration, invitation, account administration, or password-recovery flow.
-- One active round can be started; there is no close-round UI yet. No/Skip deck rules and 15-Yes progress messaging are Milestone 3. No-voted recipes remain available in the explicit recipe list/detail view for editing.
+- A Chef can start and close one active round at a time; closing a round allows the next week's round to start. No/Skip deck rules and 15-Yes progress messaging are Milestone 3. No-voted recipes remain available in the explicit recipe list/detail view for editing.
 - The UI selects the first household membership; multi-household switching is not implemented. Another member's round-start requires Refresh/reload on an already-open screen.
 - Current votes are stored across rounds; intra-round vote changes are not an append-only event history. Concurrent updates use last-write-wins, and simultaneous first writes may require a refresh/retry after 409.
 - SQLite API tests exercise HTTP, Identity, and relational behavior but do not prove PostgreSQL migrations. The separate Compose smoke check covers the real provider; no committed browser test runner exists yet.

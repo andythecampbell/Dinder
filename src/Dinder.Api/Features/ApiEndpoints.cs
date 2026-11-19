@@ -53,6 +53,11 @@ public static class ApiEndpoints
             var round = await service.Start(householdId, UserId(user), ct);
             return Results.Ok(new RoundDto(round.Id, round.StartedAt, round.TargetYesCount));
         });
+        kitchen.MapPost("/rounds/{roundId:guid}/close", async (Guid householdId, Guid roundId, ClaimsPrincipal user, PlanningService service, CancellationToken ct) =>
+        {
+            await service.Close(householdId, roundId, UserId(user), ct);
+            return Results.NoContent();
+        });
         kitchen.MapPut("/rounds/{roundId:guid}/votes/{recipeId:guid}", async (Guid householdId, Guid roundId, Guid recipeId, VoteRequest input, ClaimsPrincipal user, PlanningService service, CancellationToken ct) =>
         {
             if (input.Choice is null) throw new RuleViolation(400, "Choose Yes, No, or Skip.");
